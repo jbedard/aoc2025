@@ -25,15 +25,20 @@ func main() {
 
 	for line := range strings.SplitSeq(strings.TrimSpace(string(content)), "\n") {
 		n, _ := strconv.Atoi(line[1:])
-		if line[0] == 'L' {
-			d = (d - n) % 100
-		} else {
-			d = (d + n) % 100
+
+		for i := 0; i < n; i++ {
+			if line[0] == 'L' {
+				d--
+			} else {
+				d++
+			}
+
+			if d%100 == 0 {
+				zeroCount++
+			}
 		}
 
-		if d%100 == 0 {
-			zeroCount++
-		}
+		d = d % 100
 	}
 	fmt.Printf("Zero count: %d\n", zeroCount)
 }
