@@ -39,5 +39,11 @@ func addRangeInvalidIds(low, high int) int {
 
 func isInvalidId(id int) bool {
 	s := strconv.Itoa(id)
-	return len(s)%2 == 0 && s[0:len(s)/2] == s[len(s)/2:]
+	for i := 1; i <= len(s)/2; i++ {
+		ss := s[0:i]
+		if strings.Count(s, ss)*len(ss) == len(s) {
+			return true
+		}
+	}
+	return false
 }

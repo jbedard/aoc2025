@@ -42,11 +42,11 @@ func TestPart1Example(t *testing.T) {
 		t.Errorf("Expected 33, got %d", c)
 	}
 
-	if c := addInvalidIds([]string{"95-115"}); c != 99 {
+	if c := addInvalidIds([]string{"95-115"}); c != 210 {
 		t.Errorf("Expected 99, got %d", c)
 	}
 
-	if c := addInvalidIds([]string{"998-1012"}); c != 1010 {
+	if c := addInvalidIds([]string{"998-1012"}); c != 2009 {
 		t.Errorf("Expected 1010, got %d", c)
 	}
 
@@ -70,7 +70,7 @@ func TestPart1Example(t *testing.T) {
 		t.Errorf("Expected 38593859, got %d", c)
 	}
 
-	if c := addInvalidIds([]string{"565653-565659", "824824821-824824827", "2121212118-2121212124"}); c != 0 {
-		t.Errorf("Expected 0, got %d", c)
+	if c := addInvalidIds([]string{"565653-565659", "824824821-824824827", "2121212118-2121212124"}); c != 2946602601 {
+		t.Errorf("Expected 2946602601, got %d", c)
 	}
 }
