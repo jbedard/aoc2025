@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	t := 0
+	t := uint64(0)
 	for s := range lib.ReadInputLines() {
 		t += maxJoltage(s)
 	}
@@ -17,13 +17,13 @@ func main() {
 	fmt.Printf("Total: %d\n", t)
 }
 
-func maxJoltage(s string) int {
-	t := 0
-	p := 2
+func maxJoltage(s string) uint64 {
+	t := uint64(0)
+	p := 12
 	for d := byte('9'); d >= '0' && p > 0; {
 		if di := strings.IndexByte(s, d); di != -1 && (len(s)-di >= p) {
 			// Add this digit's place value to total
-			t += int(math.Pow10(p-1)) * int(d-'0')
+			t += uint64(math.Pow10(p-1)) * uint64(d-'0')
 
 			p--           // the next digit is 1/10 the place value
 			s = s[di+1:]  // truncate string to after found digit
