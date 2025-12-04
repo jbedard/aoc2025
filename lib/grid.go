@@ -4,11 +4,18 @@ import (
 	"iter"
 )
 
+type Coord struct {
+	X int
+	Y int
+}
+
 type Grid[T any] interface {
 	W() int
 	H() int
 	At(x, y int) T
 
+	Set(x, y int, r rune)
+	Matches(pred func(int, int, T) bool) iter.Seq[Coord]
 	CountMatches(pred func(int, int, T) bool) int
 	CountAround(x, y int, pred func(int, int, T) bool) int
 }
@@ -35,6 +42,12 @@ func NewCharGridFromSeq(seq iter.Seq[string]) Grid[rune] {
 	return &charGrid{rows: rows, w: w}
 }
 
+func (g *charGrid) Set(x, y int, r rune) {
+	row := []rune(g.rows[y])
+	row[x] = r
+	g.rows[y] = string(row)
+}
+
 func (g *charGrid) At(x, y int) rune {
 	return rune(g.rows[y][x])
 }
@@ -45,6 +58,20 @@ func (g *charGrid) W() int {
 
 func (g *charGrid) H() int {
 	return len(g.rows)
+}
+
+func (g *charGrid) Matches(pred func(int, int, rune) bool) iter.Seq[Coord] {
+	return func(yield func(Coord) bool) {
+		for y := 0; y < g.H(); y++ {
+			for x := 0; x < g.W(); x++ {
+				if pred(x, y, g.At(x, y)) {
+					if !yield(Coord{X: x, Y: y}) {
+						return
+					}
+				}
+			}
+		}
+	}
 }
 
 func (g *charGrid) CountMatches(pred func(int, int, rune) bool) int {
