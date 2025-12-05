@@ -79,6 +79,7 @@ func main() {
 	fresh, available := parseInput()
 
 	part1(fresh, available)
+	part2(fresh)
 }
 
 func part1(fresh RangeSet, available []Ingredient) {
@@ -91,4 +92,23 @@ func part1(fresh RangeSet, available []Ingredient) {
 	}
 
 	println("Part 1 fresh count:", c)
+}
+
+func part2(fresh RangeSet) {
+	c := int64(0)
+	p := int64(-1)
+
+	for i, r := range fresh {
+		if i == 0 || p < r.Start {
+			// The first or a new range, simply count and move on
+			c += r.End - r.Start + 1
+			p = r.End
+		} else if p < r.End {
+			// Overlapping range, only count the non-overlapping part
+			c += r.End - p
+			p = r.End
+		}
+	}
+
+	println("Part 2 total fresh count:", c)
 }
