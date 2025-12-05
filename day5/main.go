@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"cmp"
 	"os"
 	"slices"
 	"strconv"
@@ -63,13 +64,7 @@ func parseInput() (RangeSet, []Ingredient) {
 	}
 
 	slices.SortFunc(ranges, func(a, b Range) int {
-		if a.Start < b.Start {
-			return -1
-		} else if a.Start > b.Start {
-			return 1
-		} else {
-			return 0
-		}
+		return cmp.Compare(a.Start, b.Start)
 	})
 
 	return ranges, items
