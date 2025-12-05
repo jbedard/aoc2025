@@ -21,14 +21,14 @@ type Grid[T any] interface {
 }
 
 type charGrid struct {
-	rows []string
+	rows [][]rune
 	w    int
 }
 
 var _ Grid[rune] = (*charGrid)(nil)
 
 func NewCharGridFromSeq(seq iter.Seq[string]) Grid[rune] {
-	rows := []string{}
+	rows := [][]rune{}
 	w := -1
 	for line := range seq {
 		if w == -1 {
@@ -36,20 +36,18 @@ func NewCharGridFromSeq(seq iter.Seq[string]) Grid[rune] {
 		} else if len(line) != w {
 			panic("inconsistent row widths")
 		}
-		rows = append(rows, line)
+		rows = append(rows, []rune(line))
 	}
 
 	return &charGrid{rows: rows, w: w}
 }
 
 func (g *charGrid) Set(x, y int, r rune) {
-	row := []rune(g.rows[y])
-	row[x] = r
-	g.rows[y] = string(row)
+	g.rows[y][x] = r
 }
 
 func (g *charGrid) At(x, y int) rune {
-	return rune(g.rows[y][x])
+	return g.rows[y][x]
 }
 
 func (g *charGrid) W() int {
