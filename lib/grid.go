@@ -13,6 +13,7 @@ type Grid[T any] interface {
 	W() int
 	H() int
 	At(x, y int) T
+	Rows() iter.Seq2[int, []T]
 
 	Set(x, y int, r rune)
 	Matches(pred func(int, int, T) bool) iter.Seq[Coord]
@@ -40,6 +41,16 @@ func NewCharGridFromSeq(seq iter.Seq[string]) Grid[rune] {
 	}
 
 	return &charGrid{rows: rows, w: w}
+}
+
+func (g *charGrid) Rows() iter.Seq2[int, []rune] {
+	return func(yield func(int, []rune) bool) {
+		for r, row := range g.rows {
+			if !yield(r, row) {
+				return
+			}
+		}
+	}
 }
 
 func (g *charGrid) Set(x, y int, r rune) {
