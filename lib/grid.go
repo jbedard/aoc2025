@@ -43,6 +43,14 @@ func NewCharGridFromSeq(seq iter.Seq[string]) Grid[rune] {
 	return &charGrid{rows: rows, w: w}
 }
 
+func NewCharGridFromSeq2(seq iter.Seq2[int, string]) Grid[rune] {
+	return NewCharGridFromSeq(func(yield func(string) bool) {
+		seq(func(_ int, line string) bool {
+			return yield(line)
+		})
+	})
+}
+
 func (g *charGrid) Rows() iter.Seq2[int, []rune] {
 	return func(yield func(int, []rune) bool) {
 		for r, row := range g.rows {

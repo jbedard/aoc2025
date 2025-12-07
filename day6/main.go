@@ -38,6 +38,10 @@ func main() {
 
 	g, o = parseInput2()
 	println("Part 2:", part1(g, o))
+
+	p1, p2 := all_v2()
+	println("Part 1 v2:", p1)
+	println("Part 2 v2:", p2)
 }
 
 func part1(g [][]int, o []string) int {
@@ -147,4 +151,90 @@ func parseInput2() ([][]int, []string) {
 	}
 
 	return g, ops
+}
+
+func all_v2() (int, int) {
+	lines := slices.Collect(lib.ReadInputLines())
+
+	// The operations and indexes into the rows
+	ops := []rune{}
+	opIndexes := []int{}
+	for i, char := range lines[len(lines)-1] {
+		if char == '*' || char == '+' {
+			ops = append(ops, char)
+			opIndexes = append(opIndexes, i)
+		}
+	}
+
+	// The grid of characters (excluding the last row of operations)
+	g := lib.NewCharGridFromSeq2(slices.All(lines[:len(lines)-1]))
+
+	// The totals for both parth 1 and part 2 computed simultaneously
+	total_p1 := 0
+	total_p2 := 0
+
+	for col, opIndex := range opIndexes {
+		// The last index of this column
+		lastIndex := opIndex + 1
+		if col < len(opIndexes)-1 {
+			lastIndex = opIndexes[col+1] - 1
+		} else {
+			lastIndex = g.W()
+		}
+
+		// The numbers in this column
+		numbers_p1 := []int{}
+		numbers_p2 := []int{}
+
+		// Part1: simple extraction of numbers in this column left-to-right per row
+		for row := range g.H() {
+			num := 0
+			for c := opIndex; c < lastIndex; c++ {
+				ch := g.At(c, row)
+				if ch != ' ' {
+					num = num*10 + int(ch-'0')
+				}
+			}
+			numbers_p1 = append(numbers_p1, num)
+		}
+
+		// Part2: extraction of numbers in this column top-to-bottom per column
+		for c := opIndex; c < lastIndex; c++ {
+			num := 0
+			for row := range g.H() {
+				ch := g.At(c, row)
+				if ch != ' ' {
+					num = num*10 + int(ch-'0')
+				}
+			}
+			numbers_p2 = append(numbers_p2, num)
+		}
+
+		switch ops[col] {
+		case '*':
+			total_p1 += multiply(numbers_p1)
+			total_p2 += multiply(numbers_p2)
+		case '+':
+			total_p1 += add(numbers_p1)
+			total_p2 += add(numbers_p2)
+		}
+	}
+
+	return total_p1, total_p2
+}
+
+func add(nums []int) int {
+	t := 0
+	for _, n := range nums {
+		t += n
+	}
+	return t
+}
+
+func multiply(nums []int) int {
+	t := 1
+	for _, n := range nums {
+		t *= n
+	}
+	return t
 }
