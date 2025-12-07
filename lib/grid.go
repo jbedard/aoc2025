@@ -15,7 +15,7 @@ type Grid[T any] interface {
 	At(x, y int) T
 	Rows() iter.Seq2[int, []T]
 
-	Set(x, y int, r rune)
+	Set(x, y int, r T)
 	Matches(pred func(int, int, T) bool) iter.Seq[Coord]
 	CountMatches(pred func(int, int, T) bool) int
 	CountAround(x, y int, pred func(int, int, T) bool) int
