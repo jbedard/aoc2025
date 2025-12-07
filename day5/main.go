@@ -1,13 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"cmp"
-	"os"
+	_ "embed"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/jbedard/aoc2025/lib"
 )
+
+//go:embed input.txt
+var content string
 
 type Range struct {
 	Start Ingredient
@@ -28,20 +32,11 @@ func (rs RangeSet) Contains(i Ingredient) bool {
 type Ingredient = int64
 
 func parseInput() (RangeSet, []Ingredient) {
-	r, err := os.Open("./input.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-
-	scanner := bufio.NewScanner(r)
-
 	doneRanges := false
 	ranges := RangeSet{}
 	items := []Ingredient{}
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	for line := range lib.ReadLines(content) {
 		if line == "" {
 			doneRanges = true
 			continue
@@ -57,10 +52,6 @@ func parseInput() (RangeSet, []Ingredient) {
 
 			ranges = append(ranges, Range{Start: start, End: end})
 		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		panic(err)
 	}
 
 	slices.SortFunc(ranges, func(a, b Range) int {

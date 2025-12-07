@@ -1,15 +1,17 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/jbedard/aoc2025/lib"
 )
 
+//go:embed input.txt
+var content string
+
 func main() {
-	c := addInvalidIds(lib.ReadInputList())
+	c := addInvalidIds(strings.Split(strings.TrimSpace(content), ","))
 	fmt.Printf("Invalid invalids total: %d\n", c)
 }
 

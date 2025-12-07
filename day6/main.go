@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"slices"
 	"strconv"
 	"strings"
@@ -8,11 +9,14 @@ import (
 	"github.com/jbedard/aoc2025/lib"
 )
 
+//go:embed input.txt
+var content string
+
 func parseInput1() ([][]int, []string) {
 	g := [][]int{}
 	o := []string{}
 
-	for line := range lib.ReadInputLines() {
+	for line := range lib.ReadLines(content) {
 		line = strings.TrimLeft(line, " ")
 
 		if strings.HasPrefix(line, "*") || strings.HasPrefix(line, "+") {
@@ -92,7 +96,7 @@ func parseInput2() ([][]int, []string) {
 		o: "*", "+", "*", "+"
 	*/
 
-	lines := slices.Collect(lib.ReadInputLines())
+	lines := slices.Collect(lib.ReadLines(content))
 
 	ops := []string{}
 	offsets := []int{}
@@ -154,7 +158,7 @@ func parseInput2() ([][]int, []string) {
 }
 
 func all_v2() (int, int) {
-	lines := slices.Collect(lib.ReadInputLines())
+	lines := slices.Collect(lib.ReadLines(content))
 
 	// The operations and indexes into the rows
 	ops := []rune{}

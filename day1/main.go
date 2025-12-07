@@ -1,29 +1,20 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
-	"io"
-	"os"
 	"strconv"
 	"strings"
 )
 
+//go:embed input.txt
+var content string
+
 func main() {
-	r, err := os.Open("./input.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer r.Close()
-
-	content, err := io.ReadAll(r)
-	if err != nil {
-		panic(err)
-	}
-
 	d := 50
 	zeroCount := 0
 
-	for line := range strings.SplitSeq(strings.TrimSpace(string(content)), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(content), "\n") {
 		n, _ := strconv.Atoi(line[1:])
 
 		for i := 0; i < n; i++ {

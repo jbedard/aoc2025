@@ -1,16 +1,18 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"math"
 	"strings"
-
-	"github.com/jbedard/aoc2025/lib"
 )
+
+//go:embed input.txt
+var content string
 
 func main() {
 	t := uint64(0)
-	for s := range lib.ReadInputLines() {
+	for s := range lib.ReadLines(content) {
 		t += maxJoltage(s)
 	}
 

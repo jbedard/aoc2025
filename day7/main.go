@@ -1,9 +1,16 @@
 package main
 
-import "github.com/jbedard/aoc2025/lib"
+import (
+	_ "embed"
+
+	"github.com/jbedard/aoc2025/lib"
+)
+
+//go:embed input.txt
+var content string
 
 func main() {
-	g := lib.NewCharGridFromSeq(lib.ReadInputLines())
+	g := lib.NewCharGridFromSeq(lib.ReadLines(content))
 
 	count, forks := part1(g)
 	println("Part 1:", count)
