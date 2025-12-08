@@ -17,6 +17,8 @@ func main() {
 	}
 	connectCount := 1000
 
+	defer lib.CpuProfile()()
+
 	p1, p2 := part1(points, connectCount)
 	println("Part 1:", p1)
 	println("Part 2:", p2)
