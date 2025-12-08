@@ -36,7 +36,7 @@ func part1(points []lib.Pos, connectCount int) (int, int) {
 			distances = append(distances, PointPairDist{i1, i2, p1.Dist(p2)})
 		}
 	}
-	slices.SortStableFunc(distances, func(a, b PointPairDist) int {
+	slices.SortFunc(distances, func(a, b PointPairDist) int {
 		return a[2] - b[2]
 	})
 
@@ -80,7 +80,7 @@ func part1(points []lib.Pos, connectCount int) (int, int) {
 		cc++
 		if cc == connectCount {
 			part1Circuites := slices.Clone(circuits)
-			slices.SortStableFunc(part1Circuites, func(a, b map[int]struct{}) int {
+			slices.SortFunc(part1Circuites, func(a, b map[int]struct{}) int {
 				return len(b) - len(a)
 			})
 			part1Answer = len(part1Circuites[0]) * len(part1Circuites[1]) * len(part1Circuites[2])
