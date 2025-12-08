@@ -17,13 +17,14 @@ func main() {
 	}
 	connectCount := 1000
 
-	r1 := part1(points, connectCount)
-	println("Part 1:", r1)
+	p1, p2 := part1(points, connectCount)
+	println("Part 1:", p1)
+	println("Part 2:", p2)
 }
 
 type PointPairDist = [3]int
 
-func part1(points []lib.Pos, connectCount int) int {
+func part1(points []lib.Pos, connectCount int) (int, int) {
 	// Calculate distances between all points in shortest order
 	distances := []PointPairDist{}
 	for i1 := 0; i1 < len(points); i1++ {
@@ -38,13 +39,16 @@ func part1(points []lib.Pos, connectCount int) int {
 	})
 
 	// Start with each point in its own circuit
-	pointCircuits := make([]int, len(points))
-	circuits := make([][]int, len(points))
+	circuitCount := len(points)
+	pointCircuits := make([]int, circuitCount)
+	circuits := make([]map[int]struct{}, circuitCount)
 	for i := range pointCircuits {
 		pointCircuits[i] = i
-		circuits[i] = []int{i}
+		circuits[i] = map[int]struct{}{i: {}}
 	}
 
+	part1Answer := -1
+	part2Result := distances[0]
 	cc := 0
 
 	// Merge the closest N points
@@ -59,27 +63,31 @@ func part1(points []lib.Pos, connectCount int) int {
 			// Not already in the same circuit: merge two circuits
 			fromId := c2
 			toId := c1
-			for _, pi := range circuits[fromId] {
+			for pi := range circuits[fromId] {
 				pointCircuits[pi] = toId
-				for _, pi2 := range circuits[fromId] {
-					if !slices.Contains(circuits[toId], pi2) {
-						circuits[toId] = append(circuits[toId], pi2)
-					}
+				for pi2 := range circuits[fromId] {
+					circuits[toId][pi2] = struct{}{}
 				}
 			}
+			circuitCount--
 			circuits[fromId] = nil
+			part2Result = d
 		}
 
 		// TODO: why are we incrementing when we may not have connected anything!?
 		cc++
-		if cc >= connectCount {
+		if cc == connectCount {
+			part1Circuites := slices.Clone(circuits)
+			slices.SortStableFunc(part1Circuites, func(a, b map[int]struct{}) int {
+				return len(b) - len(a)
+			})
+			part1Answer = len(part1Circuites[0]) * len(part1Circuites[1]) * len(part1Circuites[2])
+		}
+
+		if circuitCount == 1 {
 			break
 		}
 	}
 
-	slices.SortStableFunc(circuits, func(a, b []int) int {
-		return len(b) - len(a)
-	})
-
-	return len(circuits[0]) * len(circuits[1]) * len(circuits[2])
+	return part1Answer, (points[part2Result[0]].X * points[part2Result[1]].X)
 }

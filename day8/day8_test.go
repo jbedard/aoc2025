@@ -36,9 +36,13 @@ func TestPart1(t *testing.T) {
 	}
 
 	connectCount := 10
-	result := part1(points, connectCount)
+	result1, result2 := part1(points, connectCount)
 
-	if 40 != result {
-		t.Errorf("expected 40, got %d", result)
+	if 40 != result1 {
+		t.Errorf("expected 40, got %d", result1)
+	}
+
+	if 25272 != result2 {
+		t.Errorf("expected 25272, got %d", result2)
 	}
 }
