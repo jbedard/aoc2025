@@ -48,10 +48,9 @@ func part1(points []lib.Pos, connectCount int) (int, int) {
 	// Start with each point in its own circuit
 	circuitCount := len(points)
 	pointCircuits := make([]int, circuitCount)
-	circuits := make([]map[int]struct{}, circuitCount)
+	circuits := make([][]int, circuitCount)
 	for i := range pointCircuits {
-		pointCircuits[i] = i
-		circuits[i] = map[int]struct{}{i: {}}
+		pointCircuits[i] = -1
 	}
 
 	part1Answer := -1
@@ -66,26 +65,40 @@ func part1(points []lib.Pos, connectCount int) (int, int) {
 		// Circuits of the points
 		c1, c2 := pointCircuits[i1], pointCircuits[i2]
 
-		if c1 != c2 {
+		if c1 == -1 && c2 == -1 {
+			// Neither point is in a circuit: create a new circuit
+			circuits[i1] = []int{i1, i2}
+			pointCircuits[i1] = i1
+			pointCircuits[i2] = i1
+			circuitCount--
+		} else if c1 == -1 {
+			// Point 1 is not in a circuit: add it to point 2's circuit
+			circuits[c2] = append(circuits[c2], i1)
+			pointCircuits[i1] = c2
+			circuitCount--
+		} else if c2 == -1 {
+			// Point 2 is not in a circuit: add it to point 1's circuit
+			circuits[c1] = append(circuits[c1], i2)
+			pointCircuits[i2] = c1
+			circuitCount--
+		} else if c1 != c2 {
 			// Not already in the same circuit: merge two circuits
 			fromId := c2
 			toId := c1
-			for pi := range circuits[fromId] {
+			for _, pi := range circuits[fromId] {
 				pointCircuits[pi] = toId
-				for pi2 := range circuits[fromId] {
-					circuits[toId][pi2] = struct{}{}
-				}
+				circuits[toId] = append(circuits[toId], pi)
 			}
 			circuitCount--
 			circuits[fromId] = nil
-			part2Result = d
 		}
 
 		// TODO: why are we incrementing when we may not have connected anything!?
 		cc++
+		part2Result = d
 		if cc == connectCount {
 			part1Circuites := slices.Clone(circuits)
-			slices.SortFunc(part1Circuites, func(a, b map[int]struct{}) int {
+			slices.SortFunc(part1Circuites, func(a, b []int) int {
 				return len(b) - len(a)
 			})
 			part1Answer = len(part1Circuites[0]) * len(part1Circuites[1]) * len(part1Circuites[2])
