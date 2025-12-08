@@ -26,8 +26,7 @@ func main() {
 
 type PointPairDist = [3]int
 
-func part1(points []lib.Pos, connectCount int) (int, int) {
-	// Calculate distances between all points in shortest order
+func calculatePairs(points []lib.Pos) []PointPairDist {
 	distances := make([]PointPairDist, 0, len(points)*len(points)/2)
 	for i1 := 0; i1 < len(points); i1++ {
 		p1 := points[i1]
@@ -39,6 +38,12 @@ func part1(points []lib.Pos, connectCount int) (int, int) {
 	slices.SortFunc(distances, func(a, b PointPairDist) int {
 		return a[2] - b[2]
 	})
+	return distances
+}
+
+func part1(points []lib.Pos, connectCount int) (int, int) {
+	// Calculate distances between all points in shortest order
+	distances := calculatePairs(points)
 
 	// Start with each point in its own circuit
 	circuitCount := len(points)
