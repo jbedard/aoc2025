@@ -28,7 +28,7 @@ type PointPairDist = [3]int
 
 func part1(points []lib.Pos, connectCount int) (int, int) {
 	// Calculate distances between all points in shortest order
-	distances := []PointPairDist{}
+	distances := make([]PointPairDist, 0, len(points)*len(points)/2)
 	for i1 := 0; i1 < len(points); i1++ {
 		p1 := points[i1]
 		for i2 := i1 + 1; i2 < len(points); i2++ {
