@@ -29,3 +29,17 @@ func ReadPos3d(s string) Pos3d {
 		Z: z,
 	}
 }
+
+type Pos2d struct {
+	X, Y int
+}
+
+func ReadPos2d(s string) Pos2d {
+	a := strings.SplitN(s, ",", 2)
+	x, _ := strconv.Atoi(a[0])
+	y, _ := strconv.Atoi(a[1])
+	return Pos2d{
+		X: x,
+		Y: y,
+	}
+}
