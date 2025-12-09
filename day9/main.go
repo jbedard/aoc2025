@@ -2,7 +2,6 @@ package main
 
 import (
 	_ "embed"
-	"fmt"
 	"math"
 	"slices"
 	"strings"
@@ -23,7 +22,7 @@ func main() {
 	defer lib.CpuProfile()()
 
 	println("Part 1: ", part1(points))
-	println("Part 2: ", part2_a(points))
+	println("Part 2: ", part2_b(points))
 }
 
 func area(p1 lib.Pos2d, p2 lib.Pos2d) int {
@@ -47,10 +46,11 @@ func part1(points []lib.Pos2d) int {
 	return a
 }
 
-func part2_a(points []lib.Pos2d) int {
+func part2_b(points []lib.Pos2d) int {
 	startT := time.Now()
 
-	fmt.Printf("Start: %v\n", time.Since(startT))
+	lib.Progress(startT, "Calculating bounds...")
+	defer lib.ProgressDone()
 
 	// Calculate the bounds
 	min_x, max_x := math.MaxInt, 0
@@ -69,6 +69,50 @@ func part2_a(points []lib.Pos2d) int {
 			max_y = p.Y
 		}
 	}
+
+	lib.Progress(startT, "Calculating boxes...")
+
+	// Calculate every box that could potentially be valid
+	boxes := make([][3]int, 0, len(points)*len(points)/2)
+	for i1 := 0; i1 < len(points); i1++ {
+		for i2 := i1 + 1; i2 < len(points); i2++ {
+			x0, x1 := points[i1].X, points[i2].X
+			if x0 > x1 {
+				x0, x1 = x1, x0
+			}
+			y0, y1 := points[i1].Y, points[i2].Y
+			if y0 > y1 {
+				y0, y1 = y1, y0
+			}
+
+			// Exclude as many boxes as possible that are known to be invalid
+			hasNested := false
+			for i3 := 0; i3 < len(points) && !hasNested; i3++ {
+				if i3 == i1 || i3 == i2 {
+					continue
+				}
+				x2, y2 := points[i3].X, points[i3].Y
+
+				if x0 <= x2 && x2 <= x1 && y0 <= y2 && y2 <= y1 {
+					// Overlapping, but must allow edges and corners overlapping
+					if !((x2 == x0 || x2 == x1) && (y2 == y0 || y2 == y1)) {
+						hasNested = true
+					}
+				}
+			}
+
+			if !hasNested {
+				boxes = append(boxes, [3]int{i1, i2, (x1 - x0 + 1) * (y1 - y0 + 1)})
+			}
+		}
+	}
+
+	lib.Progress(startT, "Sorting boxes...")
+	slices.SortFunc(boxes, func(a, b [3]int) int {
+		return b[2] - a[2]
+	})
+
+	lib.Progress(startT, "Building grid...")
 
 	// Construct grid of max bounds
 	g := make([][]byte, max_y+1)
@@ -102,6 +146,8 @@ func part2_a(points []lib.Pos2d) int {
 		}
 	}
 
+	lib.Progress(startT, "Filling grid...")
+
 	// Fill the insides
 	for y := min_y; y <= max_y; y++ {
 		acc := byte(0)
@@ -114,21 +160,11 @@ func part2_a(points []lib.Pos2d) int {
 		}
 	}
 
-	fmt.Printf("Grid built: %v\n", time.Since(startT))
-
-	areas := make([][3]int, 0, len(points)*len(points)/2)
-	for i1 := 1; i1 < len(points); i1++ {
-		for i2 := i1 + 1; i2 < len(points); i2++ {
-			areas = append(areas, [3]int{i1, i2, area(points[i1], points[i2])})
+	for i, ar := range boxes {
+		if i%10 == 0 {
+			lib.Progress(startT, "Checking %d/%d boxes...", i, len(boxes))
 		}
-	}
-	slices.SortFunc(areas, func(a, b [3]int) int {
-		return b[2] - a[2]
-	})
 
-	fmt.Printf("Areas calculated: %v\n", time.Since(startT))
-
-	for _, ar := range areas {
 		i1, i2, a := ar[0], ar[1], ar[2]
 		if isBlockInGrid(g, points[i1], points[i2]) {
 			return a

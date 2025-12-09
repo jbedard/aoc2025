@@ -28,7 +28,7 @@ func TestPart1(t *testing.T) {
 		t.Errorf("expected 50, got %d", r)
 	}
 
-	r2 := part2_a(points)
+	r2 := part2_b(points)
 	if r2 != 24 {
 		t.Errorf("expected 24, got %d", r2)
 	}
