@@ -11,9 +11,9 @@ import (
 var content string
 
 func main() {
-	points := []lib.Pos{}
+	points := []lib.Pos3d{}
 	for line := range lib.ReadLines(content) {
-		points = append(points, lib.ReadPoint(line))
+		points = append(points, lib.ReadPos3d(line))
 	}
 	connectCount := 1000
 
@@ -26,7 +26,7 @@ func main() {
 
 type PointPairDist = [3]int
 
-func calculatePairs(points []lib.Pos) []PointPairDist {
+func calculatePairs(points []lib.Pos3d) []PointPairDist {
 	distances := make([]PointPairDist, 0, len(points)*len(points)/2)
 	for i1 := 0; i1 < len(points); i1++ {
 		p1 := points[i1]
@@ -41,7 +41,7 @@ func calculatePairs(points []lib.Pos) []PointPairDist {
 	return distances
 }
 
-func part1(points []lib.Pos, connectCount int) (int, int) {
+func part1(points []lib.Pos3d, connectCount int) (int, int) {
 	// Calculate distances between all points in shortest order
 	distances := calculatePairs(points)
 

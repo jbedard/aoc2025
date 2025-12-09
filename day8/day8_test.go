@@ -30,9 +30,9 @@ func TestPart1(t *testing.T) {
 984,92,344
 425,690,689
 `
-	points := []lib.Pos{}
+	points := []lib.Pos3d{}
 	for line := range lib.ReadLines(strings.TrimSpace(input)) {
-		points = append(points, lib.ReadPoint(line))
+		points = append(points, lib.ReadPos3d(line))
 	}
 
 	connectCount := 10
