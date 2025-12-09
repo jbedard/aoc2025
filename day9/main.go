@@ -115,9 +115,10 @@ func part2_b(points []lib.Pos2d) int {
 	lib.Progress(startT, "Building grid...")
 
 	// Construct grid of max bounds
-	g := make([][]byte, max_y+1)
-	for y := 0; y <= max_y; y++ {
-		g[y] = make([]byte, max_x+2) // Add an extra +1 so debugging shows an extra columns of 0s
+	// Add an extra +1 so debugging shows an extra columns of 0s
+	g := make([][]byte, max_y+2)
+	for y := 0; y < len(g); y++ {
+		g[y] = make([]byte, max_x+2)
 	}
 
 	// Fill between the points
