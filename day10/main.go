@@ -21,13 +21,14 @@ func (s switchState) String() string {
 type schematics struct {
 	on       switchState
 	switches []switchState
+	jolts    []uint8
 
 	// A map of enabled switches and how many combinations of switches lead to that state
 	combos map[switchState]int
 }
 
 func (s *schematics) String() string {
-	return fmt.Sprintf("on: %016b switches: %v", s.on, s.switches)
+	return fmt.Sprintf("on: %016b switches: %v levels: %v", s.on, s.switches, s.jolts)
 }
 
 func readSchematics(input string) []*schematics {
@@ -40,11 +41,23 @@ func readSchematics(input string) []*schematics {
 			panic("unexpected number of switches")
 		}
 
+		initState := chunks[0][1:strings.IndexRune(chunks[0], ']')]
 		on := switchState(0)
-		for n, c := range chunks[0][1:strings.IndexRune(chunks[0], ']')] {
+		for n, c := range initState {
 			if c == '#' {
 				on |= 1 << (15 - n)
 			}
+		}
+
+		joltsStr := chunks[len(chunks)-1]
+		joltsStr = joltsStr[1 : len(joltsStr)-1]
+		jolts := make([]uint8, len(initState))
+		for n, num := range strings.Split(joltsStr, ",") {
+			i, _ := strconv.Atoi(num)
+			if i > 255 {
+				panic("jolt level too high")
+			}
+			jolts[n] = uint8(i)
 		}
 
 		if len(chunks[1:len(chunks)-1]) > 16 {
@@ -74,6 +87,7 @@ func readSchematics(input string) []*schematics {
 		result = append(result, &schematics{
 			on:       on,
 			switches: switches,
+			jolts:    jolts,
 			combos:   combos,
 		})
 	}
@@ -96,5 +110,21 @@ func part1(schematics []*schematics) int {
 			panic("no solution found: " + s.String())
 		}
 	}
+	return result
+}
+
+func part2(schematics []*schematics) int {
+	result := 0
+
+	for _, s := range schematics {
+		result += part2_a(s)
+	}
+
+	return result
+}
+
+func part2_a(s *schematics) int {
+	result := 0
+
 	return result
 }
