@@ -23,6 +23,8 @@ type schematics struct {
 	switches []switchState
 	jolts    []uint8
 
+	switchMaxes []uint8
+
 	// A map of enabled switches and how many combinations of switches lead to that state
 	combos map[switchState]int
 }
@@ -65,11 +67,21 @@ func readSchematics(input string) []*schematics {
 		}
 
 		switches := make([]switchState, len(chunks)-2)
+		switchMaxes := make([]uint8, len(switches))
+		for i := range len(switchMaxes) {
+			switchMaxes[i] = 255
+		}
 		combos := make(map[switchState]int, len(chunks)<<1)
 		for sn, flips := range chunks[1 : len(chunks)-1] {
 			s := switchState(0)
 			for _, num := range strings.Split(strings.Trim(flips, "()"), ",") {
 				n, _ := strconv.Atoi(num)
+
+				m := jolts[n]
+				if m < switchMaxes[sn] {
+					switchMaxes[sn] = m
+				}
+
 				s |= 1 << (15 - n)
 			}
 
@@ -88,7 +100,9 @@ func readSchematics(input string) []*schematics {
 			on:       on,
 			switches: switches,
 			jolts:    jolts,
-			combos:   combos,
+
+			combos:      combos,
+			switchMaxes: switchMaxes,
 		})
 	}
 
@@ -123,8 +137,14 @@ func part2(schematics []*schematics) int {
 	return result
 }
 
-func part2_a(s *schematics) int {
+func part2_a(scm *schematics) int {
 	result := 0
+
+	for _, s := range scm.switches {
+		for n := range scm.switchMaxes[s] {
+			// can use switch 's' at most 'n' times
+		}
+	}
 
 	return result
 }
