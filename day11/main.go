@@ -14,33 +14,42 @@ var content string
 type node int32
 type path []node
 
-func newNode(name string) node {
-	if len(name) != 3 {
-		panic("invalid node name: " + name)
-	}
-	h := int32('z'-name[0])<<16 | int32('z'-name[1])<<8 | int32('z'-name[2])
-	return node(h)
+type depMap [][]node
+type depStore struct {
+	named map[string]node
+	deps  depMap
 }
 
 func (n node) String() string {
 	return string([]byte{byte('z' - (int32(n) >> 16)), byte('z' - ((int32(n) >> 8) & 0xff)), byte('z' - (int32(n) & 0xff))})
 }
 
-var svr = newNode("svr")
-var fft = newNode("fft")
-var dac = newNode("dac")
-var out = newNode("out")
-
-func parseInput(input string) map[node][]node {
-	result := make(map[node][]node)
+func parseInput(input string) depStore {
+	result := depStore{
+		named: map[string]node{},
+		deps:  depMap{},
+	}
 
 	for line := range lib.ReadLines(input) {
 		parts := strings.SplitN(line, ": ", 2)
 		name := parts[0]
 		deps := strings.Fields(parts[1])
-		result[newNode(name)] = make([]node, len(deps))
-		for n, d := range deps {
-			result[newNode(name)][n] = newNode(d)
+
+		idx, hasIdx := result.named[name]
+		if !hasIdx {
+			idx = node(len(result.deps))
+			result.named[name] = idx
+			result.deps = append(result.deps, nil)
+		}
+
+		for _, d := range deps {
+			dIdx, dHasIdx := result.named[d]
+			if !dHasIdx {
+				dIdx = node(len(result.deps))
+				result.named[d] = dIdx
+				result.deps = append(result.deps, nil)
+			}
+			result.deps[idx] = append(result.deps[idx], dIdx)
 		}
 	}
 
@@ -59,13 +68,13 @@ func main() {
 	println("Part 2:", r2)
 }
 
-func part1(d map[node][]node) int {
+func part1(d depStore) int {
 	visited := make(map[node][]path)
-	part1_visit(d, visited, []node{}, newNode("you"))
-	return len(visited[newNode("out")])
+	part1_visit(d.deps, visited, []node{}, d.named["you"])
+	return len(visited[d.named["out"]])
 }
 
-func part1_visit(d map[node][]node, visited map[node][]path, p []node, todo node) {
+func part1_visit(d depMap, visited map[node][]path, p []node, todo node) {
 	here := append(p[:], todo)
 	visited[todo] = append(visited[todo], here)
 	for _, next := range d[todo] {
@@ -86,22 +95,27 @@ const (
 
 type nodeSet = map[node]struct{}
 
-func part2(d map[node][]node) int {
+func part2(d depStore) int {
 	// svr ... {fft + dac} ... out
 
 	defer lib.ProgressDone()
 
-	rev := make(map[node][]node, len(d))
-	for from, tos := range d {
+	rev := make(depMap, len(d.deps))
+	for from, tos := range d.deps {
 		for _, to := range tos {
-			rev[to] = append(rev[to], from)
+			rev[to] = append(rev[to], node(from))
 		}
 	}
 
+	svr := node(d.named["svr"])
+	fft := node(d.named["fft"])
+	dac := node(d.named["dac"])
+	out := node(d.named["out"])
+
 	from := map[node]nodeSet{
-		svr: reachableNodes(d, svr),
-		fft: reachableNodes(d, fft),
-		dac: reachableNodes(d, dac),
+		svr: reachableNodes(d.deps, svr),
+		fft: reachableNodes(d.deps, fft),
+		dac: reachableNodes(d.deps, dac),
 	}
 	to := map[node]nodeSet{
 		fft: reachableNodes(rev, fft),
@@ -128,23 +142,23 @@ func part2(d map[node][]node) int {
 	return r
 }
 
-func countPaths(d map[node][]node, nodes nodeSet, from, to node) int {
+func countPaths(d depStore, nodes nodeSet, from, to node) int {
 	lib.Progress(startT, "%s...%s", from, to)
 
 	nodes[from] = struct{}{}
-	localD := make(map[node][]node, len(nodes))
+	localD := make(depMap, len(d.deps))
 	for n := range nodes {
-		for _, dn := range d[n] {
+		for _, dn := range d.deps[n] {
 			if _, ok := nodes[dn]; ok || dn == to {
 				localD[n] = append(localD[n], dn)
 			}
 		}
 	}
-	walkState := make(map[node]walkState, len(localD)*2)
+	walkState := make([]walkState, len(d.deps))
 	return part2_nav_visit(localD, walkState, from, to)
 }
 
-func part2_nav_visit(d map[node][]node, walkState map[node]walkState, current, target node) int {
+func part2_nav_visit(d depMap, walkState []walkState, current, target node) int {
 	if current == target {
 		return 1
 	}
@@ -174,7 +188,7 @@ func part2_nav_visit(d map[node][]node, walkState map[node]walkState, current, t
 	return foundSomething
 }
 
-func reachableNodes(n map[node][]node, start node) nodeSet {
+func reachableNodes(n depMap, start node) nodeSet {
 	result := make(nodeSet, len(n))
 	todo := []node{start}
 	for len(todo) > 0 {
