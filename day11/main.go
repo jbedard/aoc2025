@@ -20,10 +20,6 @@ type depStore struct {
 	deps  depMap
 }
 
-func (n node) String() string {
-	return string([]byte{byte('z' - (int32(n) >> 16)), byte('z' - ((int32(n) >> 8) & 0xff)), byte('z' - (int32(n) & 0xff))})
-}
-
 func parseInput(input string) depStore {
 	result := depStore{
 		named: map[string]node{},
@@ -84,15 +80,6 @@ func part1_visit(d depMap, visited map[node][]path, p []node, todo node) {
 
 var startT = time.Now()
 
-type walkState uint8
-
-const (
-	walkStateNone walkState = iota
-	walkStateWalking
-	walkStateWalked
-	walkStateDeadend
-)
-
 type nodeSet = map[node]struct{}
 
 func part2(d depStore) int {
@@ -107,43 +94,37 @@ func part2(d depStore) int {
 		}
 	}
 
-	svr := node(d.named["svr"])
-	fft := node(d.named["fft"])
-	dac := node(d.named["dac"])
-	out := node(d.named["out"])
-
-	from := map[node]nodeSet{
-		svr: reachableNodes(d.deps, svr),
-		fft: reachableNodes(d.deps, fft),
-		dac: reachableNodes(d.deps, dac),
+	traversals := [][]node{
+		{d.named["svr"], d.named["fft"], d.named["dac"], d.named["out"]},
+		{d.named["svr"], d.named["dac"], d.named["fft"], d.named["out"]},
 	}
-	to := map[node]nodeSet{
-		fft: reachableNodes(rev, fft),
-		dac: reachableNodes(rev, dac),
-		out: reachableNodes(rev, out),
-	}
+	from := map[node]nodeSet{}
+	to := map[node]nodeSet{}
 
 	r := 0
+	for _, trav := range traversals {
+		pc := 1
+		for i := range len(trav) - 1 {
+			if from[trav[i]] == nil {
+				from[trav[i]] = reachableNodes(d.deps, trav[i])
+			}
+			if to[trav[i+1]] == nil {
+				to[trav[i+1]] = reachableNodes(rev, trav[i+1])
+			}
 
-	if fromFftToDac := intersectSet(from[fft], to[dac], nil); len(fromFftToDac) > 0 {
-		fromSvrToFft := intersectSet(from[svr], to[fft], fromFftToDac)
-		dacToOut := intersectSet(from[dac], to[out], fromFftToDac)
-
-		r += countPaths(d, fromSvrToFft, svr, fft) * countPaths(d, fromFftToDac, fft, dac) * countPaths(d, dacToOut, dac, out)
-	}
-
-	if fromDacToFft := intersectSet(from[dac], to[fft], nil); len(fromDacToFft) > 0 {
-		fromSvrToDac := intersectSet(from[svr], to[dac], fromDacToFft)
-		fftToOut := intersectSet(from[fft], to[out], fromDacToFft)
-
-		r += countPaths(d, fromSvrToDac, svr, dac) * countPaths(d, fromDacToFft, dac, fft) * countPaths(d, fftToOut, fft, out)
+			pc *= countPaths(d, intersectSet(from[trav[i]], to[trav[i+1]]), trav[i], trav[i+1])
+			if pc == 0 {
+				break
+			}
+		}
+		r += pc
 	}
 
 	return r
 }
 
 func countPaths(d depStore, nodes nodeSet, from, to node) int {
-	lib.Progress(startT, "%s...%s", from, to)
+	lib.Progress(startT, "%d...%d", from, to)
 
 	nodes[from] = struct{}{}
 	localD := make(depMap, len(d.deps))
@@ -154,35 +135,32 @@ func countPaths(d depStore, nodes nodeSet, from, to node) int {
 			}
 		}
 	}
-	walkState := make([]walkState, len(d.deps))
+	walkState := make([]int, len(d.deps))
 	return part2_nav_visit(localD, walkState, from, to)
 }
 
-func part2_nav_visit(d depMap, walkState []walkState, current, target node) int {
+func part2_nav_visit(d depMap, walkState []int, current, target node) int {
 	if current == target {
 		return 1
 	}
 
-	switch walkState[current] {
-	case walkStateWalking:
-		// Gone in a circle
-		return 0
-	case walkStateDeadend:
-		// Seen before and know it goes nowhere
-		return 0
+	if walkState[current] != 0 {
+		// Seen before
+		return walkState[current]
 	}
 
-	foundSomething := 0
-	walkState[current] = walkStateWalking
+	walkState[current] = -1
 
+	foundSomething := 0
 	for _, next := range d[current] {
-		nextFoundSomething := part2_nav_visit(d, walkState, next, target)
-		if nextFoundSomething == 0 {
-			walkState[next] = walkStateDeadend
-		} else {
-			walkState[next] = walkStateWalked
-			foundSomething += nextFoundSomething
+		pathsFound := part2_nav_visit(d, walkState, next, target)
+		if 0 < pathsFound {
+			foundSomething += pathsFound
 		}
+	}
+
+	if foundSomething > 0 {
+		walkState[current] = foundSomething
 	}
 
 	return foundSomething
@@ -204,15 +182,10 @@ func reachableNodes(n depMap, start node) nodeSet {
 	return result
 }
 
-func intersectSet(a, b nodeSet, exclude nodeSet) nodeSet {
+func intersectSet(a, b nodeSet) nodeSet {
 	result := make(nodeSet, (len(a)+len(b))/2)
 	for k := range a {
 		if _, ok := b[k]; ok {
-			if exclude != nil {
-				if _, excluded := exclude[k]; excluded {
-					continue
-				}
-			}
 			result[k] = struct{}{}
 		}
 	}
